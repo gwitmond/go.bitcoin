@@ -58,11 +58,18 @@ func (a Amount) String() string {
 	return fmt.Sprintf("%s%s.%s", s, mayor, minor)
 }
 
-// This fulfills the contract for flag.Value which is handy.
+// Show shows the bitcoin amount as string but strips the trailing 0's
+func (a Amount) Show() string {
+	return strings.TrimRight(a.String(), "0")
+}
+	
+//This fulfills the contract for flag.Value which is handy.
 func (a *Amount) Set(to string) error {
 	s, err := AmountFromBitcoinsString(to)
-	*a = s
-	return err
+	if err != nil { return err }
+	// only set *a when there is no error, otherwise, leave old.
+       *a = s
+       return err
 }
 
 // Returns value as amount in satoshi's, formated as base 10 decimal string. (1 BTC = 100,000,000).
@@ -96,6 +103,12 @@ func AmountFromBitcoinsString(bitcoins string) (Amount, error) {
 		return 0, ErrTooBig
 	}
 	return Amount(s), err
+}
+
+// Create a satoshi-amount from a float. 
+// Round at specified decimal places
+func AmountFromFloat(btc float64, precision int) (Amount, error) {
+	return AmountFromBitcoinsString(fmt.Sprintf("%.*f", precision, btc))
 }
 
 // Internal helper function. Checks and converts bitcoin string to satoshi's.
